@@ -107,23 +107,17 @@ public class Panel {
     }
 
     public static void withdraw(Connection connection, Account account) throws SQLException {
-        Statement statement = connection.createStatement();
-        String checkSql = "SELECT balance FROM Account WHERE account_number = '" + account.getAccountNumber() + "'";
-        ResultSet rs = statement.executeQuery(checkSql);
+        String sql = "UPDATE Account SET balance = balance - " + account.getBalance() +
+                " WHERE account_number = '" + account.getAccountNumber() + "' AND balance >= " + account.getBalance();
 
-        if (rs.next()) {
-            BigDecimal currentBalance = rs.getBigDecimal("balance");
-            if (currentBalance.compareTo(account.getBalance()) >= 0) {
-                String updateSql = "UPDATE Account SET balance = balance - " + account.getBalance() + " WHERE account_number = '" + account.getAccountNumber() + "'";
-                statement.executeUpdate(updateSql);
-                System.out.println("Withdrawal successful.");
-            } else {
-                System.out.println("Insufficient funds.");
-            }
+        Statement statement = connection.createStatement();
+        int rows = statement.executeUpdate(sql);
+
+        if (rows > 0) {
+            System.out.println("Withdrawal successful.");
         } else {
-            System.out.println("Account not found.");
+            System.out.println("Withdrawal failed. Account not found or money not enough.");
         }
-        rs.close();
         statement.close();
     }
 
